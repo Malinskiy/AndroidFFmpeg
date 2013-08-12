@@ -16,9 +16,6 @@
 [submodule "FFmpegLibrary/jni/libass"]
 	path = FFmpegLibrary/jni/libass
 	url = https://code.google.com/p/libass/
-[submodule "FFmpegLibrary/jni/fribidi"]
-	path = FFmpegLibrary/jni/fribidi
-	url = git://anongit.freedesktop.org/fribidi/fribidi
 [submodule "FFmpegLibrary/jni/freetype2"]
 	path = FFmpegLibrary/jni/freetype2
 	url = git://git.sv.gnu.org/freetype/freetype2.git
