@@ -18,7 +18,7 @@
 	url = https://code.google.com/p/libass/
 [submodule "FFmpegLibrary/jni/fribidi"]
 	path = FFmpegLibrary/jni/fribidi
-	url = https://github.com/behdad/fribidi.git
+	url = git://anongit.freedesktop.org/fribidi/fribidi
 [submodule "FFmpegLibrary/jni/freetype2"]
 	path = FFmpegLibrary/jni/freetype2
 	url = git://git.sv.gnu.org/freetype/freetype2.git
