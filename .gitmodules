@@ -19,3 +19,6 @@
 [submodule "FFmpegLibrary/jni/freetype2"]
 	path = FFmpegLibrary/jni/freetype2
 	url = git://git.sv.gnu.org/freetype/freetype2.git
+[submodule "FFmpegLibrary/jni/fribidi"]
+	path = FFmpegLibrary/jni/fribidi
+	url = git://anongit.freedesktop.org/fribidi/fribidi
