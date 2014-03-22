@@ -21,14 +21,14 @@ if [ "$NDK" = "" ]; then
 	exit 1
 fi
 
-OS=`uname -s | tr '[A-Z]' '[a-z]'`
+OS=`uname -s | tr '[A-Z]' '[a-z]'`-`uname -m`
 function build_x264
 {
 	PLATFORM=$NDK/platforms/$PLATFORM_VERSION/arch-$ARCH/
 	export PATH=${PATH}:$PREBUILT/bin/
 	CROSS_COMPILE=$PREBUILT/bin/$EABIARCH-
 	CFLAGS=$OPTIMIZE_CFLAGS
-#CFLAGS=" -I$ARM_INC -fpic -DANDROID -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -DANDROID  -Wa,--noexecstack -MMD -MP "
+#CFLAGS=" -I$ARM_INC -f was copying the folder, and renaming it to "linux-x86" and now pic -DANDROID -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64 -DANDROID  -Wa,--noexecstack -MMD -MP "
 	export CPPFLAGS="$CFLAGS"
 	export CFLAGS="$CFLAGS"
 	export CXXFLAGS="$CFLAGS"
@@ -94,7 +94,7 @@ function build_aac
 	export CFLAGS="$CFLAGS"
 	export CXXFLAGS="$CFLAGS"
 	export CXX="${CROSS_COMPILE}g++ --sysroot=$PLATFORM"
-	export CC="${CROSS_COMPILE}gcc --sysroot=$PLATFORM"
+	export CC="${CROSS_COMPILE}gcc-$COMPILER_VERSION --sysroot=$PLATFORM"
 	export NM="${CROSS_COMPILE}nm"
 	export STRIP="${CROSS_COMPILE}strip"
 	export RANLIB="${CROSS_COMPILE}ranlib"
@@ -227,6 +227,7 @@ function build_ffmpeg
 {
 	PLATFORM=$NDK/platforms/$PLATFORM_VERSION/arch-$ARCH/
 	CC=$PREBUILT/bin/$EABIARCH-gcc
+	CXX=$PREBUILT/bin/$EABIARCH-g++
 	CROSS_PREFIX=$PREBUILT/bin/$EABIARCH-
 	PKG_CONFIG=${CROSS_PREFIX}pkg-config
 	if [ ! -f $PKG_CONFIG ];
@@ -247,57 +248,32 @@ EOF
 	    --extra-libs="-lgcc" \
 	    --arch=$ARCH \
 	    --cc=$CC \
+	    --cxx=$CXX \
 	    --cross-prefix=$CROSS_PREFIX \
 	    --nm=$NM \
 	    --sysroot=$PLATFORM \
-	    --extra-cflags=" -O3 -fpic -DANDROID -DHAVE_SYS_UIO_H=1 -Dipv6mr_interface=ipv6mr_ifindex -fasm -Wno-psabi -fno-short-enums  -fno-strict-aliasing -finline-limit=300 $OPTIMIZE_CFLAGS " \
+	    --extra-cflags=" -O3 -fPIC -DANDROID -DHAVE_SYS_UIO_H=1 -Dipv6mr_interface=ipv6mr_ifindex -fasm -Wno-psabi -fno-short-enums  -fno-strict-aliasing -finline-limit=300 $OPTIMIZE_CFLAGS" \
+	    --extra-cxxflags="-fno-rtti" \
 	    --disable-shared \
 	    --enable-static \
 	    --enable-runtime-cpudetect \
-	    --extra-ldflags="-Wl,-rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib  -nostdlib -lc -lm -ldl -llog -L$PREFIX/lib" \
-	    --extra-cflags="-I$PREFIX/include" \
+	    --extra-ldflags="-Wl,-rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib -nostdlib -lc -lm -ldl -llog -L$PREFIX/lib -L$ANDROID_LIBS -Wl,-rpath-link,$ANDROID_LIBS -L$ANDROID_STL_LIB $CRT_BEGINOBJ" \
+	    --extra-cflags=" $ANDROID_INLCLUDES -I$PREFIX/include" \
 	    --disable-everything \
-	    --enable-libass \
+	    --enable-libstagefright-h264 \
+	    --enable-decoder=libstagefright_h264 \
 	    --enable-libvo-aacenc \
-	    --enable-libvo-amrwbenc \
-	    --enable-hwaccel=h264_vaapi \
-	    --enable-hwaccel=h264_vaapi \
-	    --enable-hwaccel=h264_dxva2 \
-	    --enable-hwaccel=mpeg4_vaapi \
 	    --enable-demuxer=mov \
 	    --enable-demuxer=h264 \
 	    --enable-demuxer=mpegvideo \
-	    --enable-demuxer=h263 \
-	    --enable-demuxer=mpegps \
-	    --enable-demuxer=mjpeg \
-	    --enable-demuxer=rtsp \
-	    --enable-demuxer=rtp \
-	    --enable-demuxer=hls \
-	    --enable-demuxer=matroska \
 	    --enable-muxer=rtsp \
 	    --enable-muxer=mp4 \
 	    --enable-muxer=mov \
-	    --enable-muxer=mjpeg \
-	    --enable-muxer=matroska \
 	    --enable-protocol=crypto \
 	    --enable-protocol=jni \
 	    --enable-protocol=file \
-	    --enable-protocol=rtp \
-	    --enable-protocol=tcp \
-	    --enable-protocol=udp \
-	    --enable-protocol=applehttp \
-	    --enable-protocol=hls \
-	    --enable-protocol=http \
-	    --enable-decoder=xsub \
-	    --enable-decoder=jacosub \
-	    --enable-decoder=dvdsub \
-	    --enable-decoder=dvbsub \
-	    --enable-decoder=subviewer \
 	    --enable-decoder=rawvideo \
 	    --enable-encoder=rawvideo \
-	    --enable-decoder=mjpeg \
-	    --enable-encoder=mjpeg \
-	    --enable-decoder=h263 \
 	    --enable-decoder=mpeg4 \
 	    --enable-encoder=mpeg4 \
 	    --enable-decoder=h264 \
@@ -305,17 +281,6 @@ EOF
 	    --enable-decoder=aac \
 	    --enable-encoder=aac \
 	    --enable-parser=h264 \
-	    --enable-encoder=mp2 \
-	    --enable-decoder=mp2 \
-	    --enable-encoder=libvo_amrwbenc \
-	    --enable-decoder=amrwb \
-	    --enable-muxer=mp2 \
-	    --enable-bsfs \
-	    --enable-decoders \
-	    --enable-encoders \
-	    --enable-parsers \
-	    --enable-hwaccels \
-	    --enable-muxers \
 	    --enable-avformat \
 	    --enable-avcodec \
 	    --enable-avresample \
@@ -328,14 +293,14 @@ EOF
 	    --disable-ffserver \
 	    --disable-avfilter \
 	    --disable-avdevice \
-	    --enable-nonfree \
+	    --disable-nonfree \
 	    --enable-version3 \
 	    --enable-memalign-hack \
 	    --enable-asm \
 	    $ADDITIONAL_CONFIGURE_FLAG \
 	    || exit 1
 	make clean || exit 1
-	make -j4 install || exit 1
+	make -j5 install || exit 1
 
 	cd ..
 }
@@ -343,99 +308,146 @@ EOF
 function build_one {
 	cd ffmpeg
 	PLATFORM=$NDK/platforms/$PLATFORM_VERSION/arch-$ARCH/
-	$PREBUILT/bin/$EABIARCH-ld -rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib -L$PREFIX/lib  -soname $SONAME -shared -nostdlib  -z,noexecstack -Bsymbolic --whole-archive --no-undefined -o $OUT_LIBRARY -lavcodec -lavformat -lavresample -lavutil -lswresample -lass -lfreetype -lfribidi -lswscale -lvo-aacenc -lvo-amrwbenc -lc -lm -lz -ldl -llog  --warn-once  --dynamic-linker=/system/bin/linker -zmuldefs $PREBUILT/lib/gcc/$EABIARCH/4.4.3/libgcc.a || exit 1
+	#$PREBUILT/bin/$EABIARCH-ld -rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib -L$PREFIX/lib  -soname $SONAME -shared -nostdlib  -z noexecstack -Bsymbolic --whole-archive --no-undefined -o $OUT_LIBRARY -lavcodec -lavformat -lavresample -lavutil -lswresample -lass -lfreetype -lfribidi -lswscale -lvo-aacenc -lvo-amrwbenc -lc -lm -lz -ldl -llog  --dynamic-linker=/system/bin/linker -zmuldefs $PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/libgcc.a || exit 1
+	$PREBUILT/bin/$EABIARCH-ld -rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib -L$PREFIX/lib  -L$ANDROID_LIBS -L$ANDROID_STL_LIB -soname $SONAME -shared -nostdlib  -z noexecstack -Bsymbolic --whole-archive --no-undefined -o $OUT_LIBRARY -lavcodec -lavformat -lavresample -lavutil -lswresample -lswscale -lvo-aacenc -lc -lm -lz -ldl -llog $ANDROID_STAGEFRIGHT_ADDITIONAL_LIBS $CRT_BEGINOBJ  --dynamic-linker=/system/bin/linker -zmuldefs $ANDROID_LIB_GCC || exit 1
+	$PREBUILT/bin/$EABIARCH-strip -s $OUT_LIBRARY
 	cd ..
 }
+
+./fetch_android_deps.sh
+
+ANDROID_SOURCE=$(pwd)/android-source
+ANDROID_INCLUDES_BASE="-I$ANDROID_SOURCE/frameworks/base/include"
+ANDROID_INCLUDES_BASE="$ANDROID_INCLUDES_BASE -I$ANDROID_SOURCE/frameworks/base/include/media/stagefright/openmax"
+ANDROID_INCLUDES_BASE="$ANDROID_INCLUDES_BASE -I$ANDROID_SOURCE/frameworks/native/include"
+ANDROID_INCLUDES_BASE="$ANDROID_INCLUDES_BASE -I$ANDROID_SOURCE/frameworks/native/include/media/openmax"
+ANDROID_INCLUDES_BASE="$ANDROID_INCLUDES_BASE -I$ANDROID_SOURCE/frameworks/av/include"
+ANDROID_INCLUDES_BASE="$ANDROID_INCLUDES_BASE -I$ANDROID_SOURCE/system/core/include"
+ANDROID_INCLUDES_BASE="$ANDROID_INCLUDES_BASE -I$ANDROID_SOURCE/hardware/libhardware/include"
+ANDROID_STAGEFRIGHT_ADDITIONAL_LIBS="-lstagefright -lmedia -lutils -lbinder -lgnustl_shared"
 
 #arm v5
 EABIARCH=arm-linux-androideabi
 ARCH=arm
+ABI=armeabi
 CPU=armv5
 OPTIMIZE_CFLAGS="-marm -march=$CPU"
+COMPILER_VERSION=4.8
+ANDROID_STL_LIB="$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI"
+ANDROID_INLCLUDES="$ANDROID_INCLUDES_BASE -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/include -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI/include"
+ANDROID_LIBS=$(pwd)/android-libs/$ABI/lib
 PREFIX=../ffmpeg-build/armeabi
 OUT_LIBRARY=$PREFIX/libffmpeg.so
 ADDITIONAL_CONFIGURE_FLAG=
 SONAME=libffmpeg.so
-PREBUILT=$NDK/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$OS-x86
-PLATFORM_VERSION=android-5
-build_amr
+PREBUILT=$NDK/toolchains/arm-linux-androideabi-$COMPILER_VERSION/prebuilt/$OS
+CRT_BEGINOBJ="$PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/crtbegin.o $PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/crtend.o"
+ANDROID_LIB_GCC="$PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/libgcc.a"
+PLATFORM_VERSION=android-9
+#build_amr
 build_aac
-build_fribidi
-build_freetype2
-build_ass
+#build_fribidi
+#build_freetype2
+#build_ass
 build_ffmpeg
 build_one
 
 #x86
 EABIARCH=i686-linux-android
 ARCH=x86
+ABI=x86
 OPTIMIZE_CFLAGS="-m32"
+COMPILER_VERSION=4.8
+ANDROID_STL_LIB="$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI"
+ANDROID_INLCLUDES="$ANDROID_INCLUDES_BASE -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/include -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI/include"
+ANDROID_LIBS=$(pwd)/android-libs/$ABI/lib
 PREFIX=../ffmpeg-build/x86
 OUT_LIBRARY=$PREFIX/libffmpeg.so
 ADDITIONAL_CONFIGURE_FLAG=--disable-asm
 SONAME=libffmpeg.so
-PREBUILT=$NDK/toolchains/x86-4.4.3/prebuilt/$OS-x86
+PREBUILT=$NDK/toolchains/x86-$COMPILER_VERSION/prebuilt/$OS
+CRT_BEGINOBJ="$PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/crtbegin.o $PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/crtend.o"
 PLATFORM_VERSION=android-9
-build_amr
-build_aac
-build_fribidi
-build_freetype2
-build_ass
-build_ffmpeg
-build_one
+#build_amr
+#build_aac
+#build_fribidi
+#build_freetype2
+#build_ass
+#build_ffmpeg
+#build_one
 
 #mips
 EABIARCH=mipsel-linux-android
 ARCH=mips
+ABI=mips
 OPTIMIZE_CFLAGS="-EL -march=mips32 -mips32 -mhard-float"
+COMPILER_VERSION=4.8
+ANDROID_STL_LIB="$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI"
+ANDROID_INLCLUDES="$ANDROID_INCLUDES_BASE -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/include -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI/include"
+ANDROID_LIBS=$(pwd)/android-libs/$ABI/lib
 PREFIX=../ffmpeg-build/mips
 OUT_LIBRARY=$PREFIX/libffmpeg.so
 ADDITIONAL_CONFIGURE_FLAG="--disable-mips32r2"
 SONAME=libffmpeg.so
-PREBUILT=$NDK/toolchains/mipsel-linux-android-4.4.3/prebuilt/$OS-x86
+PREBUILT=$NDK/toolchains/mipsel-linux-android-$COMPILER_VERSION/prebuilt/$OS
+CRT_BEGINOBJ="$PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/crtbegin.o $PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/crtend.o"
 PLATFORM_VERSION=android-9
-build_amr
-build_aac
-build_fribidi
-build_freetype2
-build_ass
-build_ffmpeg
-build_one
+#build_amr
+#build_aac
+#build_fribidi
+#build_freetype2
+#build_ass
+#build_ffmpeg
+#build_one
 
 #arm v7vfpv3
 EABIARCH=arm-linux-androideabi
 ARCH=arm
+ABI=armeabi-v7a
 CPU=armv7-a
 OPTIMIZE_CFLAGS="-mfloat-abi=softfp -mfpu=vfpv3-d16 -marm -march=$CPU "
+COMPILER_VERSION=4.8
+ANDROID_STL_LIB="$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI"
+ANDROID_INLCLUDES="$ANDROID_INCLUDES_BASE -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/include -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI/include"
+ANDROID_LIBS=$(pwd)/android-libs/$ABI/lib
 PREFIX=../ffmpeg-build/armeabi-v7a
 OUT_LIBRARY=$PREFIX/libffmpeg.so
 ADDITIONAL_CONFIGURE_FLAG=
 SONAME=libffmpeg.so
-PREBUILT=$NDK/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$OS-x86
-PLATFORM_VERSION=android-5
-build_amr
+PREBUILT=$NDK/toolchains/arm-linux-androideabi-$COMPILER_VERSION/prebuilt/$OS
+CRT_BEGINOBJ="$PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/armv7-a/crtbegin.o $PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/armv7-a/crtend.o"
+ANDROID_LIB_GCC="$PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/armv7-a/libgcc.a"
+PLATFORM_VERSION=android-9
+#build_amr
 build_aac
-build_fribidi
-build_freetype2
-build_ass
+#build_fribidi
+#build_freetype2
+#build_ass
 build_ffmpeg
 build_one
 
 #arm v7 + neon (neon also include vfpv3-32)
 EABIARCH=arm-linux-androideabi
 ARCH=arm
+ABI=armeabi-v7a
 CPU=armv7-a
 OPTIMIZE_CFLAGS="-mfloat-abi=softfp -mfpu=neon -marm -march=$CPU -mtune=cortex-a8 -mthumb -D__thumb__ "
+COMPILER_VERSION=4.8
+ANDROID_STL_LIB="$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI"
+ANDROID_INLCLUDES="$ANDROID_INCLUDES_BASE -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/include -I$NDK/sources/cxx-stl/gnu-libstdc++/$COMPILER_VERSION/libs/$ABI/include"
+ANDROID_LIBS=$(pwd)/android-libs/$ABI/lib
 PREFIX=../ffmpeg-build/armeabi-v7a-neon
 OUT_LIBRARY=../ffmpeg-build/armeabi-v7a/libffmpeg-neon.so
 ADDITIONAL_CONFIGURE_FLAG=--enable-neon
 SONAME=libffmpeg-neon.so
-PREBUILT=$NDK/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$OS-x86
+PREBUILT=$NDK/toolchains/arm-linux-androideabi-$COMPILER_VERSION/prebuilt/$OS
+CRT_BEGINOBJ="$PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/armv7-a/crtbegin.o $PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/armv7-a/crtend.o"
+ANDROID_LIB_GCC="$PREBUILT/lib/gcc/$EABIARCH/$COMPILER_VERSION/armv7-a/libgcc.a"
 PLATFORM_VERSION=android-9
-build_amr
+#build_amr
 build_aac
-build_fribidi
-build_freetype2
-build_ass
+#build_fribidi
+#build_freetype2
+#build_ass
 build_ffmpeg
 build_one

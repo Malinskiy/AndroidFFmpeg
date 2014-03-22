@@ -22,3 +22,6 @@
 [submodule "FFmpegLibrary/jni/fribidi"]
 	path = FFmpegLibrary/jni/fribidi
 	url = git://anongit.freedesktop.org/fribidi/fribidi
+[submodule "FFmpegLibrary/jni/libyuv"]
+	path = FFmpegLibrary/jni/libyuv
+	url = https://github.com/lemenkov/libyuv.git
